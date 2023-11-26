@@ -34,9 +34,49 @@ def normal(v):
     v[1] = v[1]/float(length)
     return v
 
-########## MAIN CODE ##########
+########## INITIALIZATION ##########
 
-frame = cv2.imread("Capture.png")
+frame = cv2.imread("plan_with_robot.png")
+copy = frame.copy()
+
+########## ROBOT FINDING ##########
+
+# Convert the image from BGR to RGB (OpenCV loads images in BGR by default)
+rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+# Define the lower and upper bounds for the red color in RGB
+lower_red = np.array([130, 0, 0])
+upper_red = np.array([255, 100, 100])
+
+# Create a binary mask using inRange function
+red_mask = cv2.inRange(rgb_image, lower_red, upper_red)
+
+# Apply the binary mask to the original image
+result = cv2.bitwise_and(frame, frame, mask=red_mask)
+
+# Convert the result to grayscale
+gray_result = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+
+contours, hierarchy = cv2.findContours(gray_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+min_contour_area = 100
+max_contour_area = 1000
+centroid = [0,0]
+# Draw the contours
+for i, contour_i in enumerate(contours):
+    contour_area_i = cv2.contourArea(contour_i)
+
+    if max_contour_area > contour_area_i > min_contour_area:
+        color = (0, 0, 255)
+        cv2.drawContours(copy, [contour_i], 0, color, 2)
+    M = cv2.moments(contour_i)
+    centroid[i] = np.array([int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])])
+cv2.line(copy, centroid[0], centroid[1], (0,0,255),2)
+
+# The real distance between the two markers on the robot is 5 cm. so we set a scale
+# to know how distant the objects are from the camera.
+SCALE = np.linalg.norm(centroid[0] - centroid[1])/5
+
+########## OBSTACLE FINDING ##########
 
 #Convert the frame to grayscale
 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -67,7 +107,7 @@ for i, contour_i in enumerate(contours):
 
         # Draw the contours
         color = (0, 255, 0)
-        cv2.drawContours(frame, [contour_i], 0, color, 2)
+        cv2.drawContours(copy, [contour_i], 0, color, 2)
 
         # Find the corners of the contour
         corners = cv2.approxPolyDP(contour_i, epsilon * cv2.arcLength(contour_i, True), True)
@@ -76,17 +116,20 @@ for i, contour_i in enumerate(contours):
         for corner in corners:
             # Find the vector pointing outward from the corner
             vector_farthest = find_vector_farthest(corner[0], corners)
-            # Place a point at a distance of 40 pixels from the corner
-            new_point = corner[0] + 40 * vector_farthest
+            # Place a point at a distance of 10 cm from the corner using the 
+            # SCALE we have found earlier from the robot
+            new_point = corner[0] + SCALE*7 * vector_farthest
             points.append(new_point)
 
 # Draw the points
 for point in points:
-    cv2.circle(frame, tuple(point.astype(int)), 5, (255, 0, 0), -1)
+    cv2.circle(copy, tuple(point.astype(int)), 5, (255, 0, 0), -1)
+
+
+########## RESULT DISPLAY ##########
 
 # Display the result
-cv2.imshow("Processed Frame", frame)
-
+cv2.imshow("Processed Frame", copy)
 # Close all windows if the 'q' key is pressed
 cv2.waitKey(0)
 cv2.destroyAllWindows()
