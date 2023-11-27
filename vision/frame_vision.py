@@ -1,6 +1,7 @@
 import cv2
 import time
 import numpy as np
+import pyvisgraph as vg
 
 ########## FUNCTIONS ##########
 def find_vector_farthest(corner, corners):    
@@ -28,6 +29,7 @@ def find_vector_farthest(corner, corners):
 
     return vector_farthest
 
+# Function to return the normal of a vector
 def normal(v):
     length = np.sqrt(v[0]**2+v[1]**2)
     v[0] = v[0]/float(length)
@@ -94,8 +96,9 @@ max_contour_area = 200000
 # Approximation accuracy
 epsilon = 0.025
 
-# Store points at a distance of 50 pixels from the corners
+# Store points and obstacles
 points = []
+obstacles = []
 
 # Draw all contours on the original image with a consistent color
 for i, contour_i in enumerate(contours):
@@ -111,19 +114,34 @@ for i, contour_i in enumerate(contours):
 
         # Find the corners of the contour
         corners = cv2.approxPolyDP(contour_i, epsilon * cv2.arcLength(contour_i, True), True)
+        obstacle_i = []
 
         # Draw circles at each corner
         for corner in corners:
             # Find the vector pointing outward from the corner
             vector_farthest = find_vector_farthest(corner[0], corners)
-            # Place a point at a distance of 10 cm from the corner using the 
+            # Place a point at a distance of 5 cm from the corner using the 
             # SCALE we have found earlier from the robot
-            new_point = corner[0] + SCALE*7 * vector_farthest
+            new_point = corner[0] + SCALE * 5 * vector_farthest
             points.append(new_point)
+            obstacle_i.append(vg.Point(new_point[0],new_point[1]))
+        obstacles.append(obstacle_i)
 
+# Build the visibility graph for the given points and obstacles
+g = vg.VisGraph()
+g.build(obstacles)
+shortest = g.shortest_path(obstacles[1][1], vg.Point(centroid[0][0],centroid[0][1]))
+
+shortest_np = np.array([(point.x, point.y) for point in shortest], dtype=np.int32)
+
+index = 0
 # Draw the points
 for point in points:
-    cv2.circle(copy, tuple(point.astype(int)), 5, (255, 0, 0), -1)
+    cv2.circle(copy, point.astype(int), 5, (255, 0, 0), -1)
+
+# Draw shortest path
+for i in range(len(shortest_np)-1):
+    cv2.line(copy, shortest_np[i], shortest_np[i+1], (10,10,10),1)
 
 
 ########## RESULT DISPLAY ##########
