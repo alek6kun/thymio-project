@@ -33,3 +33,8 @@ Other variables, for completeness:
 - frame : one frame of the video capture
 - copy : copy of frame used to show computer vision output
 - graph : object of class pyvisgraph.VisGraph(), used for path finding
+
+To delete the object of vision class, do:
+```python
+del vis
+```
