@@ -51,7 +51,7 @@ class Goal:
 class Vision:
     # Initialise cam, frame, copy of frame, robot, scale, graph, obstacle vertices
     def __init__(self):
-        self.cam = cv2.VideoCapture(1)
+        self.cam = cv2.VideoCapture(0)
         valid, self.frame = self.cam.read()
         if not valid:
             print("Error reading frame.")
@@ -175,7 +175,26 @@ class Vision:
         return points, g
 
     def find_goal(self):
-        x,y = 0
-        # PUT CODE HERE
+                # Convert the image from BGR to RGB
+        rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
-        return Goal(x,y)
+        # Define the lower and upper bounds for the goal color in RGB (assuming green)
+        lower_green = np.array([50, 100, 50])
+        upper_green = np.array([70, 255, 70])
+
+        # Create a binary mask
+        green_mask = cv2.inRange(rgb_image, lower_green, upper_green)
+
+        # Find contours
+        contours, _ = cv2.findContours(green_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        for contour in contours:
+            if cv2.contourArea(contour) > 100:  # threshold for goal size
+                M = cv2.moments(contour)
+                if M["m00"] != 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    return Goal(cx, cy)
+
+        return Goal(0, 0)  # Default value if goal not found
+    
