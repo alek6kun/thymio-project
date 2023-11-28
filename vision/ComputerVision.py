@@ -51,7 +51,7 @@ class Goal:
 class Vision:
     # Initialise cam, frame, copy of frame, robot, scale, graph, obstacle vertices
     def __init__(self):
-        self.cam = cv2.VideoCapture(1)
+        self.cam = cv2.VideoCapture(2   )
         valid, self.frame = self.cam.read()
         if not valid:
             print("Error reading frame.")
@@ -64,6 +64,7 @@ class Vision:
         # Release the camera and close all windows
         self.cam.release()
         cv2.destroyAllWindows()
+        del self.goal, self.robot 
 
     def update(self):
         valid, self.frame = self.cam.read()
@@ -90,8 +91,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the red color in RGB
-        lower_red = np.array([130, 0, 0])
-        upper_red = np.array([255, 100, 100])
+        lower_red = np.array([0, 0, 130])
+        upper_red = np.array([100, 100, 255])
 
         # Create a binary mask using inRange function
         red_mask = cv2.inRange(rgb_image, lower_red, upper_red)
@@ -104,8 +105,9 @@ class Vision:
 
         contours, _ = cv2.findContours(gray_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         min_contour_area = 100
-        max_contour_area = 1000
+        max_contour_area = 100000 #changed from 1000
         centroid = [0,0]
+        found = False
         # Draw the contours
         for i, contour_i in enumerate(contours):
             contour_area_i = cv2.contourArea(contour_i)
@@ -113,16 +115,23 @@ class Vision:
             if max_contour_area > contour_area_i > min_contour_area:
                 color = (0, 0, 255)
                 cv2.drawContours(self.copy, [contour_i], 0, color, 2)
-            M = cv2.moments(contour_i)
-            centroid[i] = np.array([int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])])
-        cv2.line(self.copy, centroid[0], centroid[1], (0,0,255),2)
+                M = cv2.moments(contour_i)
+                centroid[i] = np.array([int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])])
+                if i == 1:
+                    found = True
+        if found:
+            print("found")
+            cv2.line(self.copy, centroid[0], centroid[1], (0,0,255),2)
 
-        # The real distance between the two markers on the robot is 5 cm. so we set a scale
-        # to know how distant the objects are from the camera.
-        scale = np.linalg.norm(centroid[0] - centroid[1])/5
+            # The real distance between the two markers on the robot is 5 cm. so we set a scale
+            # to know how distant the objects are from the camera.
+            scale = np.linalg.norm(centroid[0] - centroid[1])/5
 
-        return Robot(centroid[0][0] + centroid[1][0]/2, centroid[0][0] + centroid[1][0]/2,
-                     np.arctan2(centroid[0][0]-centroid[1][0],centroid[1][0]-centroid[0][0])), scale
+            return Robot(centroid[0][0] + centroid[1][0]/2, centroid[0][0] + centroid[1][0]/2,
+                        np.arctan2(centroid[0][0]-centroid[1][0],centroid[1][0]-centroid[0][0])), scale
+        else:
+            print("not found")
+            return Robot(0, 0, 0), 0
     
     def find_graph(self):
         #Convert the frame to grayscale
@@ -168,6 +177,9 @@ class Vision:
                     obstacle_i.append(vg.Point(new_point[0],new_point[1]))
                 obstacles.append(obstacle_i)
 
+        for point in points:
+            cv2.circle(self.copy, point.astype(int), 5, (255, 0, 0), -1)
+
         # Build the visibility graph for the given points and obstacles
         g = vg.VisGraph()
         g.build(obstacles)
@@ -175,7 +187,8 @@ class Vision:
         return points, g
 
     def find_goal(self):
-        x,y = 0
+        x = 0
+        y = 0
         # PUT CODE HERE
 
         return Goal(x,y)
