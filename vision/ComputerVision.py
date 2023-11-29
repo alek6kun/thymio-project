@@ -6,6 +6,8 @@ from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
 ########## FUNCTIONS ##########
+
+# Function to find the vector pointing outwards from a corner
 def find_vector_farthest(corner, corners):    
     corners = corners.reshape(-1, 2)
 
@@ -50,8 +52,10 @@ class Goal:
         self.x = x
         self.y = y
 
+# Main class used to interface with vision
 class Vision:
-    # Initialise cam, frame, copy of frame, robot, scale, graph, obstacle vertices
+    # Initialise cam, frame, copy of frame, robot, scale, graph,
+    # obstacle vertices, shortest_path
     def __init__(self):
         self.cam = cv2.VideoCapture(0)
         valid, self.frame = self.cam.read()
@@ -67,8 +71,13 @@ class Vision:
         # Release the camera and close all windows
         self.cam.release()
         cv2.destroyAllWindows()
+        # Delete the robot and goal objects
+        del self.robot
+        del self.goal
 
+    # Function to update the frame, and the various entities if found 
     def update(self):
+
         valid, self.frame = self.cam.read()
         if not valid:
             print("Error reading frame.")
@@ -86,10 +95,12 @@ class Vision:
             self.goal = goal
         if found_robot and found_goal and found_graph:
             self.shortest_path = self.find_shortest_path()
-    
+
+    # Show the processed image
     def show(self):
         cv2.imshow("Processed Frame", self.copy)
     
+    #Function to make and draw the shortest path
     def find_shortest_path(self):
         shortest = self.graph.shortest_path(vg.Point(self.robot.x,self.robot.y),
                                             vg.Point(self.goal.x,self.goal.y))
@@ -155,8 +166,9 @@ class Vision:
             return True, Robot((centroid[0][0] + centroid[1][0])/2.0, (centroid[0][1] + centroid[1][1])/2.0,
                         -np.arctan2(centroid[0][1]-centroid[1][1],centroid[0][0]-centroid[1][0])), scale
         else:
-            return False, Robot(0,0,0), 0
-        
+            return False, Robot(0,0,0), 0 # Default value if robot not found
+    
+    # Function to find the obstacles and make the visibility graph
     def find_graph(self):
         #Convert the frame to grayscale
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
@@ -207,6 +219,7 @@ class Vision:
 
         # Build the visibility graph for the given points and obstacles
         g = vg.VisGraph()
+
         # Error catching because geometry of obstacles might be bad if a non-obstacle
         # is detected
         try:
@@ -234,7 +247,7 @@ class Vision:
             return False, points, g
         return found_obstacles, points, g
 
-
+    # Function to find the goal location
     def find_goal(self):
         # Convert the image from BGR to RGB
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)

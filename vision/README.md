@@ -28,6 +28,8 @@ List of useful variables:
 - scale : contains the scale of the image: pixels/real length (cm)
 - vertices : contains the coordinates of the visibility graph vertices
 - goal : contains x and y of goal
+- shortest_path : list of coordinates of points to follow for shortest path 
+  to goal
 
 Other variables, for completeness:
 - cam : object of class cv2.VideoCapture
