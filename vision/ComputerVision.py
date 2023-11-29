@@ -56,9 +56,10 @@ class Vision:
         if not valid:
             print("Error reading frame.")
         self.copy = self.frame.copy()
-        self.robot, self.scale = self.find_robot()
-        self.graph, self.vertices = self.find_graph()
-        self.goal = self.find_goal()
+        _, self.robot, self.scale = self.find_robot()
+        _, self.vertices, self.graph = self.find_graph()
+        _, self.goal = self.find_goal()
+        self.shortest_path = []
 
     def __del__(self):
         # Release the camera and close all windows
@@ -70,11 +71,19 @@ class Vision:
         if not valid:
             print("Error reading frame.")
         self.copy = self.frame.copy()
-        self.robot, scale = self.find_robot()
-        if scale != 0:
-            self.scale == scale
-        self.graph, self.vertices = self.find_graph()
-        self.goal = self.find_goal()
+        found_robot, robot, scale = self.find_robot()
+        if found_robot:
+            self.scale = scale
+            self.robot = robot
+        found_graph, vertices, graph = self.find_graph()
+        if found_graph:
+            self.vertices = vertices
+            self.graph = graph
+        found_goal, goal = self.find_goal()
+        if found_goal:
+            self.goal = goal
+        if found_robot and found_goal and found_graph:
+            self.shortest_path = self.find_shortest_path()
     
     def show(self):
         cv2.imshow("Processed Frame", self.copy)
@@ -84,7 +93,9 @@ class Vision:
                                             vg.Point(self.goal.x,self.goal.y))
 
         shortest_np = np.array([(point.x, point.y) for point in shortest], dtype=np.int32)
-
+        # Draw shortest path
+        for i in range(len(shortest_np)-1):
+            cv2.line(self.copy, shortest_np[i], shortest_np[i+1], (10,10,10),1)
         return shortest_np
 
     # Function to find robot location and frame scale
@@ -93,7 +104,7 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the red color in RGB
-        lower_red = np.array([190, 0, 0])
+        lower_red = np.array([185, 30, 30])
         upper_red = np.array([255, 130, 160])
 
         # Create a binary mask using inRange function
@@ -106,21 +117,21 @@ class Vision:
         gray_result = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
         gray_result = cv2.bilateralFilter(gray_result,5,15,15)
         contours, _ = cv2.findContours(gray_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        min_contour_area = 100
-        max_contour_area = 10000
+        min_area = 100
+        max_area = 10000
         centroid = [0,0]
 
         total = 0
         # Draw the contours
         for i, contour_i in enumerate(contours):
             contour_area_i = cv2.contourArea(contour_i)
-            if max_contour_area > contour_area_i > min_contour_area:
+            if min_area < contour_area_i < max_area:
                 total +=1
         i = 0
         if total == 2:  #Here we have found the robot
             for _, contour_i in enumerate(contours):
                 contour_area_i = cv2.contourArea(contour_i)
-                if max_contour_area > contour_area_i > min_contour_area:
+                if min_area < contour_area_i < max_area:
                     color = (0, 0, 255)
                     cv2.drawContours(self.copy, [contour_i], 0, color, 2)
                     M = cv2.moments(contour_i)
@@ -132,18 +143,18 @@ class Vision:
             # to know how distant the objects are from the camera.
             scale = np.linalg.norm(centroid[0] - centroid[1])/5
 
-            return Robot(centroid[0][0] + centroid[1][0]/2, centroid[0][0] + centroid[1][0]/2,
+            return True, Robot((centroid[0][0] + centroid[1][0])/2.0, (centroid[0][1] + centroid[1][1])/2.0,
                         np.arctan2(centroid[0][0]-centroid[1][0],centroid[1][0]-centroid[0][0])), scale
         else:
-            return Robot(0,0,0), 0
+            return False, Robot(0,0,0), 0
         
     def find_graph(self):
         #Convert the frame to grayscale
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-
+        # Apply some preprocessing
+        gray = cv2.bilateralFilter(gray,5,15,15)
         # Apply a binary threshold to identify black pixels
-        _, binary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
-
+        _, binary = cv2.threshold(gray, 90, 255, cv2.THRESH_BINARY)
         # Find contours in the binary image along with hierarchy
         contours, _ = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -165,7 +176,7 @@ class Vision:
             if min_area < contour_area_i < max_area:
                 found_obstacles = True
                 # Draw the contours
-                color = (0, 255, 0)
+                color = (0, 255, 150)
                 cv2.drawContours(self.copy, [contour_i], 0, color, 2)
 
                 # Find the corners of the contour
@@ -176,9 +187,9 @@ class Vision:
                 for corner in corners:
                     # Find the vector pointing outward from the corner
                     vector_farthest = find_vector_farthest(corner[0], corners)
-                    # Place a point at a distance of 5 cm from the corner using the 
+                    # Place a point at a distance of 7 cm from the corner using the 
                     # SCALE we have found earlier from the robot
-                    new_point = corner[0] + self.scale * 5 * vector_farthest
+                    new_point = corner[0] + self.scale * 7 * vector_farthest
                     points.append(new_point)
                     obstacle_i.append(vg.Point(new_point[0],new_point[1]))
                 obstacles.append(obstacle_i)
@@ -191,7 +202,7 @@ class Vision:
                 cv2.circle(self.copy, point.astype(int), 5, (255, 0, 0), -1)
             g.build(obstacles)
 
-        return points, g
+        return found_obstacles, points, g
 
 
     def find_goal(self):
@@ -199,22 +210,26 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the goal color in RGB (assuming green)
-        lower_green = np.array([50, 100, 50])
-        upper_green = np.array([70, 255, 70])
+        lower_green = np.array([50, 120, 90])
+        upper_green = np.array([95, 180, 150])
 
         # Create a binary mask
         green_mask = cv2.inRange(rgb_image, lower_green, upper_green)
-
+        # Apply some preprocessing
+        green_mask = cv2.bilateralFilter(green_mask,5,15,15)
         # Find contours
         contours, _ = cv2.findContours(green_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         for contour in contours:
             if cv2.contourArea(contour) > 100:  # threshold for goal size
+                # Draw the contours
+                color = (0, 255, 0)
+                cv2.drawContours(self.copy, [contour], 0, color, 2)
                 M = cv2.moments(contour)
                 if M["m00"] != 0:
                     cx = int(M["m10"] / M["m00"])
                     cy = int(M["m01"] / M["m00"])
-                    return Goal(cx, cy)
+                    return True, Goal(cx, cy)
 
-        return Goal(0, 0)  # Default value if goal not found
+        return False, Goal(0, 0)  # Default value if goal not found
     
