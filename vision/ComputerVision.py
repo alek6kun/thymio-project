@@ -2,6 +2,8 @@ import cv2
 import time
 import numpy as np
 import pyvisgraph as vg
+from shapely.geometry import Polygon
+from shapely.ops import unary_union
 
 ########## FUNCTIONS ##########
 def find_vector_farthest(corner, corners):    
@@ -118,33 +120,40 @@ class Vision:
         gray_result = cv2.bilateralFilter(gray_result,5,15,15)
         contours, _ = cv2.findContours(gray_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         min_area = 100
-        max_area = 10000
+        max_area = 1000
         centroid = [0,0]
 
         total = 0
+        nose_size = 0
         # Draw the contours
         for i, contour_i in enumerate(contours):
             contour_area_i = cv2.contourArea(contour_i)
             if min_area < contour_area_i < max_area:
                 total +=1
-        i = 0
+                nose_size = max(nose_size, contour_area_i)
+
         if total == 2:  #Here we have found the robot
             for _, contour_i in enumerate(contours):
                 contour_area_i = cv2.contourArea(contour_i)
+
                 if min_area < contour_area_i < max_area:
+                    # Selecting the nose side of the robot with i = 0
+                    if contour_area_i == nose_size:
+                        i = 0
+                    else:
+                        i = 1
                     color = (0, 0, 255)
                     cv2.drawContours(self.copy, [contour_i], 0, color, 2)
                     M = cv2.moments(contour_i)
                     centroid[i] = np.array([int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])])
-                    i += 1
             cv2.line(self.copy, centroid[0], centroid[1], (0,0,255),2)
 
-            # The real distance between the two markers on the robot is 5 cm. so we set a scale
+            # The real distance between the two markers on the robot is around 8.5 cm. so we set a scale
             # to know how distant the objects are from the camera.
-            scale = np.linalg.norm(centroid[0] - centroid[1])/5
+            scale = np.linalg.norm(centroid[0] - centroid[1])/8.5
 
             return True, Robot((centroid[0][0] + centroid[1][0])/2.0, (centroid[0][1] + centroid[1][1])/2.0,
-                        np.arctan2(centroid[0][0]-centroid[1][0],centroid[1][0]-centroid[0][0])), scale
+                        -np.arctan2(centroid[0][1]-centroid[1][1],centroid[0][0]-centroid[1][0])), scale
         else:
             return False, Robot(0,0,0), 0
         
@@ -160,7 +169,7 @@ class Vision:
 
         # Set contour area thresholds
         min_area = 1000
-        max_area = 200000
+        max_area = 100000
 
         # Approximation accuracy
         epsilon = 0.025
@@ -170,7 +179,7 @@ class Vision:
         obstacles = []
         found_obstacles = False
 
-        for _, contour_i in enumerate(contours):
+        for contour_i in contours:
             contour_area_i = cv2.contourArea(contour_i)
 
             if min_area < contour_area_i < max_area:
@@ -187,31 +196,52 @@ class Vision:
                 for corner in corners:
                     # Find the vector pointing outward from the corner
                     vector_farthest = find_vector_farthest(corner[0], corners)
-                    # Place a point at a distance of 7 cm from the corner using the 
+                    # Place a point at a distance of 10 cm from the corner using the 
                     # SCALE we have found earlier from the robot
-                    new_point = corner[0] + self.scale * 7 * vector_farthest
+                    new_point = corner[0] + self.scale * 10 * vector_farthest
                     points.append(new_point)
-                    obstacle_i.append(vg.Point(new_point[0],new_point[1]))
-                obstacles.append(obstacle_i)
+                    obstacle_i.append((int(new_point[0]),int(new_point[1])))
+                if len(obstacle_i) >= 3:
+                    obstacles.append(Polygon(obstacle_i))
+
 
         # Build the visibility graph for the given points and obstacles
         g = vg.VisGraph()
-        if found_obstacles:
-            # Draw the points
-            for point in points:
-                cv2.circle(self.copy, point.astype(int), 5, (255, 0, 0), -1)
-            g.build(obstacles)
+        # Error catching because geometry of obstacles might be bad if a non-obstacle
+        # is detected
+        try:
+            if found_obstacles:
+                # Combining obstacles if they intersect
+                exclude_list = []
+                for i in range(len(obstacles)):
+                    for j in range(i+1, len(obstacles)):
+                        if obstacles[i].intersects(obstacles[j]):
+                            exclude_list.append(i)
+                            obstacles[j] = unary_union([obstacles[i],obstacles[j]])
 
+                # Making a new list of non-intersecting polygons to use for graph making
+                new_obstacles = []
+                for i, obstacle in enumerate(obstacles):
+                    if i not in exclude_list:
+                        coords = list(obstacle.exterior.coords)
+                        new_obstacles.append([vg.Point(coord[0], coord[1]) for coord in coords])
+
+                # Draw the points
+                for point in points:
+                    cv2.circle(self.copy, point.astype(int), 5, (255, 0, 0), -1)
+                g.build(new_obstacles)
+        except:
+            return False, points, g
         return found_obstacles, points, g
 
 
     def find_goal(self):
-                # Convert the image from BGR to RGB
+        # Convert the image from BGR to RGB
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the goal color in RGB (assuming green)
-        lower_green = np.array([50, 120, 90])
-        upper_green = np.array([95, 180, 150])
+        lower_green = np.array([50, 130, 90])
+        upper_green = np.array([105, 180, 160])
 
         # Create a binary mask
         green_mask = cv2.inRange(rgb_image, lower_green, upper_green)
