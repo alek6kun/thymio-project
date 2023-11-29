@@ -3,18 +3,23 @@ from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 import numpy as np
 
-f = KalmanFilter(dim_x=3, dim_z=3) # we have x,y and theta of the robot both from the measurement and the model
-f.x = np.array([[0,0,0],
-                [0,0,0],]) # Initial position and velocity (get from camera? or we know)
+f = KalmanFilter(dim_x=3, dim_z=3) # state and measurement values are x, y and theta
 
-f.F = np.array([]) # State transition matrix  [TODO]
-               
-f.H = np.array([]) # Measurement function [TODO]
-
-f.P = np.array([[1000.,    0.],
-                [   0., 1000.] ]) # Covariance matrix (to replace with actual values) [TODO]
-
-f.R = np.array([]) # Measurement noise [TODO]
+##################### Filter parameters #####################
+# Initial state (get from camera? or we know)
+f.x = np.array([[0],  # x
+                [0],  # y
+                [0]]) # theta
+# State transition matrix
+f.F = np.array([[1,0,0],
+                [0,1,0],
+                [0,0,1]])             
+# Measurement function
+f.H = np.array([1,1,1])
+# Covariance matrix (to replace with actual values)
+f.P = np.diag([1000])
+# Measurement noise
+f.R = np.array([])
 
 f.Q = Q_discrete_white_noise(dim=2, dt=0.1, var=0.13) # Process nois (defined here as general white noise, must review)[TODO]
 
