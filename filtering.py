@@ -47,5 +47,5 @@ while i<14: # Replace true with a condition [TODO]
     f.update(z) # Update step based on measurements from the camera
     i+=1
     
-f.x # This is where the new optimal estimate is stored.# The new estimate is stored in f.x
+# The new estimate is stored in f.x
 print(f.x[:,0])
