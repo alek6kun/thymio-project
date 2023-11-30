@@ -7,7 +7,6 @@ from ComputerVision import Vision
 
 Initialise an object of vision class, which can be used to for various tasks
 ```python
-
 vis = Vision()
 
 # Returns list of coordinates from robot to goal
