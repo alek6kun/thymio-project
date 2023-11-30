@@ -3,24 +3,49 @@ from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 import numpy as np
 
-f = KalmanFilter(dim_x=3, dim_z=3) # we have x,y and theta of the robot both from the measurement and the model
-f.x = np.array([[0,0,0],
-                [0,0,0],]) # Initial position and velocity (get from camera? or we know)
+## General parameters
+dimension_x = 3 # State dimension
+dimension_z = 3 # Measurement dimension
+R = 0.02 # The radius of the Thymio's wheels (a remuserer) [TODO]
+d = 0.095 # The wheelbase of the Thymio
+dt = 0.01 # Time delta between steps
 
-f.F = np.array([]) # State transition matrix  [TODO]
-               
-f.H = np.array([]) # Measurement function [TODO]
+# Creating the filter
+f = KalmanFilter(dim_x=dimension_x, dim_z=dimension_z) # state and measurement variables are x, y and theta
 
-f.P = np.array([[1000.,    0.],
-                [   0., 1000.] ]) # Covariance matrix (to replace with actual values) [TODO]
 
-f.R = np.array([]) # Measurement noise [TODO]
-
-f.Q = Q_discrete_white_noise(dim=2, dt=0.1, var=0.13) # Process nois (defined here as general white noise, must review)[TODO]
-
-while True: # Replace true with a condition [TODO]
-    z = 0 # Replace with camera reading [TODO]
-    f.predict() # Predict step of the Kalman filter
+## Filter parameters
+# Initial state (get from camera? or we know)
+f.x = np.array([0., 0., 0.])
+# State transition matrix
+f.F = np.array([[1,0,0],
+                [0,1,0],
+                [0,0,1]])   
+# Control transition matrix
+B = np.array([[np.cos(f.x[2])*(dt/2), np.cos(f.x[2])*(dt/2)],
+              [np.sin(f.x[2])*(dt/2), np.sin(f.x[2])*(dt/2)],
+              [(dt/d), (-dt/d)]]) * R  
+#Control input
+u = np.array([[2],
+              [2]]) # Replace with motor velocities [TODO]        
+# Measurement function
+f.H = np.array([[1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]])
+# Covariance matrix (to replace with actual values) [TODO]
+f.P = np.array([[1000., 0., 0.],
+                [0., 1000., 0.],
+                [0., 0., 1000.]])
+# Measurement noise [TODO]
+f.R = Q_discrete_white_noise(dim=dimension_z,dt=0.1,var=0.3)
+# Process noise (defined here as general white noise, must review)[TODO]
+f.Q = Q_discrete_white_noise(dim=dimension_x, dt=0.1, var=0.13) 
+i=0
+while i<14: # Replace true with a condition [TODO]
+    z = np.array([[1, 1, 10]]) # Replace with camera reading [TODO]
+    f.predict(B=B, u = u) # Predict step of the Kalman filter
     f.update(z) # Update step based on measurements from the camera
+    i+=1
     
-f.x # This is where the new optimal estimate is stored.
+f.x # This is where the new optimal estimate is stored.# The new estimate is stored in f.x
+print(f.x[:,0])

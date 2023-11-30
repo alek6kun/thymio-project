@@ -7,6 +7,7 @@ from ComputerVision import Vision
 
 Initialise an object of vision class, which can be used to for various tasks
 ```python
+
 vis = Vision()
 
 # Returns list of coordinates from robot to goal
@@ -23,10 +24,13 @@ vis.robot.x  # The x coordinate of the robot
 ```
 
 List of useful variables:
-- robot : contains x, y and angle of robot
+- robot : contains x, y and angle of robot. Angle is given in the normal
+  trigonometric standard (+pi to -pi, 0 at x axis pointing right)
 - scale : contains the scale of the image: pixels/real length (cm)
 - vertices : contains the coordinates of the visibility graph vertices
 - goal : contains x and y of goal
+- shortest_path : list of coordinates of points to follow for shortest path 
+  to goal
 
 Other variables, for completeness:
 - cam : object of class cv2.VideoCapture
