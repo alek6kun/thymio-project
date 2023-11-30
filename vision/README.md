@@ -41,3 +41,9 @@ To delete the object of vision class, do:
 ```python
 del vis
 ```
+
+## Tweaks that might need to be made
+
+- Change the webcam ID in the cv2.VideoCapture() function in the __init__() function
+- Change the lower and upper bounds for the colors that are detected in the find_robot() and find_goal() functions.
+- Change the black detection threshold in the cv2.threshold() function in find_graph.
