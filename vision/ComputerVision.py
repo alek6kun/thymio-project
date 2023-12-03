@@ -62,7 +62,7 @@ class Vision:
         if not valid:
             print("Error reading frame.")
         self.copy = self.frame.copy()
-        _, self.robot, self.scale = self.find_robot()
+        self.found_robot , self.robot, self.scale = self.find_robot()
         _, self.vertices, self.graph = self.find_graph()
         _, self.goal = self.find_goal()
         self.shortest_path = []
@@ -117,8 +117,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the red color in RGB
-        lower_red = np.array([185, 30, 30])
-        upper_red = np.array([255, 130, 160])
+        lower_red = np.array([130, 30, 80])
+        upper_red = np.array([220, 100, 160])
 
         # Create a binary mask using inRange function
         red_mask = cv2.inRange(rgb_image, lower_red, upper_red)
@@ -130,8 +130,8 @@ class Vision:
         gray_result = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
         gray_result = cv2.bilateralFilter(gray_result,5,15,15)
         contours, _ = cv2.findContours(gray_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        min_area = 100
-        max_area = 1000
+        min_area = 10
+        max_area = 10000
         centroid = [0,0]
 
         total = 0
@@ -253,8 +253,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the goal color in RGB (assuming green)
-        lower_green = np.array([50, 130, 90])
-        upper_green = np.array([105, 180, 160])
+        lower_green = np.array([60, 130, 100])
+        upper_green = np.array([100, 180, 150])
 
         # Create a binary mask
         green_mask = cv2.inRange(rgb_image, lower_green, upper_green)
