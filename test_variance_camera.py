@@ -35,9 +35,7 @@ while True:
 camera_readings = np.array(camera_readings)
 print(camera_readings.shape)
 
-column_means = np.mean(camera_readings, axis=0)
-
-column_variances = np.var(camera_readings-column_means, axis=0) # Calculating the variance for data with a mean of 0
+column_variances = np.var(camera_readings, axis=0) 
 print(column_variances)
 
 
