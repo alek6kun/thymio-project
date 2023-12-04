@@ -63,9 +63,10 @@ class Vision:
             print("Error reading frame.")
         self.copy = self.frame.copy()
         self.found_robot , self.robot, self.scale = self.find_robot()
-        _, self.vertices, self.graph = self.find_graph()
-        _, self.goal = self.find_goal()
+        self.found_graph, self.vertices, self.graph = self.find_graph()
+        self.found_goal, self.goal = self.find_goal()
         self.shortest_path = []
+
 
     def __del__(self):
         # Release the camera and close all windows
@@ -86,15 +87,18 @@ class Vision:
         if found_robot:
             self.scale = scale
             self.robot = robot
+            self.found_robot = found_robot
         found_graph, vertices, graph = self.find_graph()
         if found_graph:
             self.vertices = vertices
             self.graph = graph
+            self.found_graph = True
         found_goal, goal = self.find_goal()
         if found_goal:
             self.goal = goal
-        if found_robot and found_goal and found_graph:
-            self.shortest_path = self.find_shortest_path()
+            self.found_goal=goal
+        #if found_robot and found_goal and found_graph:
+        #    self.shortest_path = self.find_shortest_path()
 
     # Show the processed image
     def show(self):
@@ -253,7 +257,7 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the goal color in RGB (assuming green)
-        lower_green = np.array([60, 130, 100])
+        lower_green = np.array([40, 120, 90])
         upper_green = np.array([100, 180, 150])
 
         # Create a binary mask
@@ -264,7 +268,7 @@ class Vision:
         contours, _ = cv2.findContours(green_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         for contour in contours:
-            if cv2.contourArea(contour) > 100:  # threshold for goal size
+            if cv2.contourArea(contour) > 300:  # threshold for goal size
                 # Draw the contours
                 color = (0, 255, 0)
                 cv2.drawContours(self.copy, [contour], 0, color, 2)

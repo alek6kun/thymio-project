@@ -14,7 +14,7 @@ last_image_time = time.time()
 ## General parameters
 dimension_x = 3 # State dimension
 dimension_z = 3 # Measurement dimension
-R = 0.02 # [m] The radius of the Thymio's wheels (a remuserer) [TODO]
+R = 0.021 # [m] The radius of the Thymio's wheels (a remuserer) [TODO]
 d = 0.095 # [m] The wheelbase of the Thymio
 dt = 0.05 # [s] Time delta between steps
 
@@ -46,8 +46,8 @@ f.P = np.array([[1000., 0., 0.],
 # Measurement noise [TODO]
 f.R = Q_discrete_white_noise(dim=dimension_z,dt=dt,var=0.3)
 # Process noise (defined here as general white noise, must review)[TODO]
-f.Q = Q_discrete_white_noise(dim=dimension_x, dt=dt, var=0.13) 
-
+camera_variances = (1.13554018e-01, 1.93571267e-01, 2.02748876e-05)
+f.Q = Q_discrete_white_noise(dim=dimension_x, dt=dt, var=camera_variances) 
 
 while True:
     # Check if it's been at least 0.05 second since the last image acquisition
@@ -58,11 +58,9 @@ while True:
     vis.update()
     
     z = np.array([[vis.robot.x, vis.robot.y, vis.robot.angle]]) # Camera reading
-    print(z)
     f.predict(B = B, u = u) # Predict step of the Kalman filter
     if vis.found_robot: # Only update if the robot was found
         f.update(z) # Update step based on measurements from the camera
-    print(f.x[0,0],f.x[1,0])
     vis.copy = cv2.circle(vis.copy,(int(f.x[0,0]),int(f.x[1,0])),20,(255,0,0),3)
     
     # Update the last image acquisition time
