@@ -98,8 +98,8 @@ class Vision:
         if found_goal:
             self.goal = goal
             self.found_goal=goal
-        if found_robot and found_goal and update_path: #and self.found_graph:
-           
+        if found_robot and found_goal and update_path and self.found_graph:
+
             if len(self.find_shortest_path())>1: 
                 self.shortest_path = self.find_shortest_path()
 
@@ -117,7 +117,7 @@ class Vision:
             cv2.line(self.copy, self.shortest_path[i], self.shortest_path[i+1], (10,10,10),1)
     #Function to make and draw the shortest path
     def find_shortest_path(self):
-        if self.found_robot and self.found_goal: 
+        if self.found_robot and self.found_goal and self.found_graph: 
             shortest = self.graph.shortest_path(vg.Point(self.robot.x,self.robot.y),
                                                 vg.Point(self.goal.x,self.goal.y))
 
@@ -133,8 +133,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the red color in RGB
-        lower_red = np.array([250, 130, 135])
-        upper_red = np.array([257, 160, 185])
+        lower_red = np.array([180, 40, 80])
+        upper_red = np.array([255, 100, 160])
 
         # Create a binary mask using inRange function
         red_mask = cv2.inRange(rgb_image, lower_red, upper_red)
@@ -269,8 +269,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the goal color in RGB (assuming green)
-        lower_green = np.array([130, 190, 140])
-        upper_green = np.array([180, 230, 180])
+        lower_green = np.array([50, 120, 100])
+        upper_green = np.array([80, 170, 160])
 
         # Create a binary mask
         green_mask = cv2.inRange(rgb_image, lower_green, upper_green)
