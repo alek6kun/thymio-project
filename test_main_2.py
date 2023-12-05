@@ -6,7 +6,7 @@ from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 import numpy as np
 
-vis = Vision()
+#vis = Vision()
 # Initialize a variable to store the last time an image was acquired
 last_image_time = time.time()
 
@@ -44,9 +44,9 @@ f.P = np.array([[1000., 0., 0.],
                 [0., 1000., 0.],
                 [0., 0., 1000.]])
 # Measurement noise [TODO]
-f.R = Q_discrete_white_noise(dim=dimension_z,dt=dt,var=0.3)
+camera_variances = np.array[1.13554018e-01, 1.93571267e-01, 2.02748876e-05]
+f.R = np.diag(camera_variances)
 # Process noise (defined here as general white noise, must review)[TODO]
-camera_variances = (1.13554018e-01, 1.93571267e-01, 2.02748876e-05)
 f.Q = Q_discrete_white_noise(dim=dimension_x, dt=dt, var=camera_variances) 
 
 while True:
@@ -61,7 +61,10 @@ while True:
     f.predict(B = B, u = u) # Predict step of the Kalman filter
     if vis.found_robot: # Only update if the robot was found
         f.update(z) # Update step based on measurements from the camera
-    vis.copy = cv2.circle(vis.copy,(int(f.x[0,0]),int(f.x[1,0])),20,(255,0,0),3)
+    #vis.copy = cv2.circle(vis.copy,(int(f.x[0,0]),int(f.x[1,0])),20,(255,0,0),3)
+    #vis.copy = cv2.ellipse(vis.copy,(int(f.x[0,0]),int(f.x[1,0])),(f.P[0,0],f.P[1,1]),f.x[2,0],0,360,(0,0,255),5)
+    vis.copy = cv2.ellipse(img = vis.copy, center=(int(f.x[0,0],int(f.x[1,0]))),
+                           axes=(int(f.P[0,0]),int(f.P[1,1])),startAngle=0,endAngle=360,color=(0,0,255),thickness=5)
     
     # Update the last image acquisition time
     last_image_time = time.time()

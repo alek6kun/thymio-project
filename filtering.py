@@ -39,15 +39,18 @@ f.P = np.array([[1000., 0., 0.],
                 [0., 1000., 0.],
                 [0., 0., 1000.]])
 # Measurement noise [TODO]
-f.R = Q_discrete_white_noise(dim=dimension_z,dt=0.1,var=0.3)
+camera_variances = (1.13554018e-01, 1.93571267e-01, 2.02748876e-05)
+f.R = np.diag(np.array(camera_variances))
 # Process noise (defined here as general white noise, must review)[TODO]
 f.Q = Q_discrete_white_noise(dim=dimension_x, dt=0.1, var=0.13) 
-
+i = 0
 
 while True: # Replace true with a condition [TODO]
-    z = np.array([[0, 0, 0]]) # Replace with camera reading [TODO]
-    f.predict(B = B, u = u) # Predict step of the Kalman filter
+    z = np.array([[40, 20, 10]]) # Replace with camera reading [TODO]
+    f.predict() # Predict step of the Kalman filter
     f.update(z) # Update step based on measurements from the camera
+    i+=1
+    print(i)
     
 # The new estimate is stored in f.x
 print(f.x[:,0])

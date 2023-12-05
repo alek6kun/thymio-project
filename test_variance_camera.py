@@ -40,4 +40,3 @@ print(column_variances)
 
 
 del vis
-
