@@ -9,6 +9,7 @@ Ts = 0.01
 SPEED = 70
 SEUIL_OBSTACLE = 100
 SEUIL_KIDNAPPED = 100
+tol = 30
 #VALUES THAT NEED TO BE TUNED BEGIN: 
 ##We add correction factors to tune the speed symmetry
 SPEED_LEFT = SPEED +1 
@@ -112,6 +113,6 @@ async def rotate(angle_diff) :
     }
     await node.set_variables(v)
 
-def close_coordinates(x, y, w, z, tolerance):
+def close_coordinates(x, y, w, z):
     distance = math.sqrt((w - x)**2 + (z - y)**2)
-    return distance <= tolerance
+    return distance <= tol
