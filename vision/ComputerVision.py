@@ -99,9 +99,9 @@ class Vision:
             self.goal = goal
             self.found_goal=goal
         if found_robot and found_goal and update_path: #and self.found_graph:
-            if self.find_shortest_path().any: 
-                if len(self.find_shortest_path()>1): 
-                    self.shortest_path = self.find_shortest_path()
+           
+            if len(self.find_shortest_path())>1: 
+                self.shortest_path = self.find_shortest_path()
 
                 print("yes : ", self.shortest_path)
             else : print("non")
