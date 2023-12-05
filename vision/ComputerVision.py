@@ -57,7 +57,7 @@ class Vision:
     # Initialise cam, frame, copy of frame, robot, scale, graph,
     # obstacle vertices, shortest_path
     def __init__(self):
-        self.cam = cv2.VideoCapture(0)
+        self.cam = cv2.VideoCapture(1)
         valid, self.frame = self.cam.read()
         if not valid:
             print("Error reading frame.")
@@ -66,6 +66,7 @@ class Vision:
         self.found_graph, self.vertices, self.graph = self.find_graph()
         self.found_goal, self.goal = self.find_goal()
         self.shortest_path = []
+        
 
 
     def __del__(self):
@@ -77,7 +78,7 @@ class Vision:
         del self.goal
 
     # Function to update the frame, and the various entities if found 
-    def update(self):
+    def update(self, update_path = 0):
 
         valid, self.frame = self.cam.read()
         if not valid:
@@ -97,23 +98,34 @@ class Vision:
         if found_goal:
             self.goal = goal
             self.found_goal=goal
-        #if found_robot and found_goal and found_graph:
-        #    self.shortest_path = self.find_shortest_path()
+        if found_robot and found_goal and update_path: #and self.found_graph:
+            if self.find_shortest_path().any: 
+                if len(self.find_shortest_path()>1): 
+                    self.shortest_path = self.find_shortest_path()
+
+                print("yes : ", self.shortest_path)
+            else : print("non")
+        self.draw_shortest_path()
+        #print("PATH : ", self.shortest_path)
+
 
     # Show the processed image
     def show(self):
         cv2.imshow("Processed Frame", self.copy)
-    
+    def draw_shortest_path(self): 
+        for i in range(len(self.shortest_path)-1):
+            cv2.line(self.copy, self.shortest_path[i], self.shortest_path[i+1], (10,10,10),1)
     #Function to make and draw the shortest path
     def find_shortest_path(self):
-        shortest = self.graph.shortest_path(vg.Point(self.robot.x,self.robot.y),
-                                            vg.Point(self.goal.x,self.goal.y))
+        if self.found_robot and self.found_goal: 
+            shortest = self.graph.shortest_path(vg.Point(self.robot.x,self.robot.y),
+                                                vg.Point(self.goal.x,self.goal.y))
 
-        shortest_np = np.array([(point.x, point.y) for point in shortest], dtype=np.int32)
-        # Draw shortest path
-        for i in range(len(shortest_np)-1):
-            cv2.line(self.copy, shortest_np[i], shortest_np[i+1], (10,10,10),1)
-        return shortest_np
+            shortest_np = np.array([(point.x, point.y) for point in shortest], dtype=np.int32)
+            # Draw shortest path
+            for i in range(len(shortest_np)-1):
+                cv2.line(self.copy, shortest_np[i], shortest_np[i+1], (10,10,10),1)
+            return shortest_np
 
     # Function to find robot location and frame scale
     def find_robot(self):
@@ -121,8 +133,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the red color in RGB
-        lower_red = np.array([130, 30, 80])
-        upper_red = np.array([220, 100, 160])
+        lower_red = np.array([250, 130, 135])
+        upper_red = np.array([257, 160, 185])
 
         # Create a binary mask using inRange function
         red_mask = cv2.inRange(rgb_image, lower_red, upper_red)
@@ -257,8 +269,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the goal color in RGB (assuming green)
-        lower_green = np.array([40, 120, 90])
-        upper_green = np.array([100, 180, 150])
+        lower_green = np.array([130, 190, 140])
+        upper_green = np.array([180, 230, 180])
 
         # Create a binary mask
         green_mask = cv2.inRange(rgb_image, lower_green, upper_green)
