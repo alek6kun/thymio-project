@@ -19,11 +19,6 @@ thymio_speed_to_mms = 19.73913043478261*1000/50 ##TO FIND THE MM/s speed, divide
 rotation_factor = 110*np.pi/360 
 #VALUES TO BE TUNED END
 
-#Global variables
-obstacle_detected = 0
-goal_reached = 0
-kidnapped = 0
-
 def compute_movement(current_pos, obj, current_angle_deg): 
     # current_angle_deg = angle between thymio front axis and x-axis
     # Extracting coordinates from current_pos and obj
@@ -73,10 +68,10 @@ class RepeatedTimer(object):
 
 def get_horizontal():
     
-        global obstacle_detected, kidnapped, rotation_done
+        global obstacle_detected, kidnapped
         prox_values = node["prox.horizontal"][:5]
         #print(list(prox_values))
-        if obstacle_detected ==0 and rotation_done == 1:
+        if obstacle_detected == 0 and rotation_done :
             obstacle_detected = any(value > SEUIL_OBSTACLE for value in prox_values)
             if obstacle_detected:
                 rotation_done = 0
