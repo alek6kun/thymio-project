@@ -62,12 +62,10 @@ class Vision:
         if not valid:
             print("Error reading frame.")
         self.copy = self.frame.copy()
-        self.found_robot , self.robot, self.scale = self.find_robot()
+        self.found_robot, self.robot, self.scale = self.find_robot()
         self.found_graph, self.vertices, self.graph = self.find_graph()
         self.found_goal, self.goal = self.find_goal()
         self.shortest_path = []
-        
-
 
     def __del__(self):
         # Release the camera and close all windows
@@ -78,54 +76,40 @@ class Vision:
         del self.goal
 
     # Function to update the frame, and the various entities if found 
-    def update(self, update_path = 0):
+    def update(self):
 
         valid, self.frame = self.cam.read()
         if not valid:
             print("Error reading frame.")
         self.copy = self.frame.copy()
-        found_robot, robot, scale = self.find_robot()
-        if found_robot:
+        self.found_robot, robot, scale = self.find_robot()
+        if self.found_robot:
             self.scale = scale
             self.robot = robot
-            self.found_robot = found_robot
-        found_graph, vertices, graph = self.find_graph()
-        if found_graph:
+        self.found_graph, vertices, graph = self.find_graph()
+        if self.found_graph:
             self.vertices = vertices
             self.graph = graph
-            self.found_graph = True
-        found_goal, goal = self.find_goal()
-        if found_goal:
+        self.found_goal, goal = self.find_goal()
+        if self.found_goal:
             self.goal = goal
-            self.found_goal=goal
-        if found_robot and found_goal and update_path and self.found_graph:
-
-            if len(self.find_shortest_path())>1: 
-                self.shortest_path = self.find_shortest_path()
-
-                print("yes : ", self.shortest_path)
-            else : print("non")
-        self.draw_shortest_path()
-        #print("PATH : ", self.shortest_path)
-
+        if self.found_robot and self.found_goal and self.found_graph:
+            self.shortest_path = self.find_shortest_path()
 
     # Show the processed image
     def show(self):
         cv2.imshow("Processed Frame", self.copy)
-    def draw_shortest_path(self): 
-        for i in range(len(self.shortest_path)-1):
-            cv2.line(self.copy, self.shortest_path[i], self.shortest_path[i+1], (10,10,10),1)
+    
     #Function to make and draw the shortest path
     def find_shortest_path(self):
-        if self.found_robot and self.found_goal and self.found_graph: 
-            shortest = self.graph.shortest_path(vg.Point(self.robot.x,self.robot.y),
-                                                vg.Point(self.goal.x,self.goal.y))
+        shortest = self.graph.shortest_path(vg.Point(self.robot.x,self.robot.y),
+                                            vg.Point(self.goal.x,self.goal.y))
 
-            shortest_np = np.array([(point.x, point.y) for point in shortest], dtype=np.int32)
-            # Draw shortest path
-            for i in range(len(shortest_np)-1):
-                cv2.line(self.copy, shortest_np[i], shortest_np[i+1], (10,10,10),1)
-            return shortest_np
+        shortest_np = np.array([(point.x, point.y) for point in shortest], dtype=np.int32)
+        # Draw shortest path
+        for i in range(len(shortest_np)-1):
+            cv2.line(self.copy, shortest_np[i], shortest_np[i+1], (10,10,10),1)
+        return shortest_np
 
     # Function to find robot location and frame scale
     def find_robot(self):
@@ -133,8 +117,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the red color in RGB
-        lower_red = np.array([180, 40, 80])
-        upper_red = np.array([255, 100, 160])
+        lower_red = np.array([190, 50, 80])
+        upper_red = np.array([255, 90, 130])
 
         # Create a binary mask using inRange function
         red_mask = cv2.inRange(rgb_image, lower_red, upper_red)
@@ -146,7 +130,7 @@ class Vision:
         gray_result = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
         gray_result = cv2.bilateralFilter(gray_result,5,15,15)
         contours, _ = cv2.findContours(gray_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        min_area = 10
+        min_area = 200
         max_area = 10000
         centroid = [0,0]
 
@@ -269,8 +253,8 @@ class Vision:
         rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Define the lower and upper bounds for the goal color in RGB (assuming green)
-        lower_green = np.array([50, 120, 100])
-        upper_green = np.array([80, 170, 160])
+        lower_green = np.array([60, 130, 100])
+        upper_green = np.array([100, 180, 150])
 
         # Create a binary mask
         green_mask = cv2.inRange(rgb_image, lower_green, upper_green)
@@ -280,7 +264,7 @@ class Vision:
         contours, _ = cv2.findContours(green_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         for contour in contours:
-            if cv2.contourArea(contour) > 300:  # threshold for goal size
+            if cv2.contourArea(contour) > 100:  # threshold for goal size
                 # Draw the contours
                 color = (0, 255, 0)
                 cv2.drawContours(self.copy, [contour], 0, color, 2)

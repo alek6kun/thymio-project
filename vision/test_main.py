@@ -13,7 +13,7 @@ while True:
         continue
     vis.show()
 
-    vis.update(check)
+    vis.update()
 
     # Update the last image acquisition time
     last_image_time = time.time()
