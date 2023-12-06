@@ -1,5 +1,6 @@
 from filterpy.kalman import KalmanFilter
 import numpy as np
+import cv2
 
 
 ## General parameters
@@ -22,7 +23,7 @@ f.F = np.eye(3)
 # Measurement function
 f.H = np.eye(3)
 # Initial covariance matrix
-f.P = np.eye(3)*100
+f.P = np.eye(3)*10
 # Measurement noise
 camera_variances = [1.13554018e-01, 1.93571267e-01, 2.02748876e-05]
 f.R = np.diag(camera_variances)
@@ -31,8 +32,8 @@ process_variances = [3.8751605996417765e-10, 3.8751605996417765e-10, 2.965686371
 f.Q = np.diag(process_variances)
 
 
-def run_filter(speed_right, speed_left, prev_angle, vis, prev_z):
-    global R, d, f
+def run_filter(speed_right, speed_left, prev_angle, vis, R, d, dt):
+    global f
     scale = vis.scale # Scale to go from m to camera coordinates
     # Converting the motors to m/s
     speed_right = (speed_right * 0.001) / thymio_speed_to_mms
@@ -50,9 +51,12 @@ def run_filter(speed_right, speed_left, prev_angle, vis, prev_z):
                     [(dt/d), (-dt/d)]]) * R
     # Getting camera measurements
     z = np.array([vis.robot.x,vis.robot.y,vis.robot.angle]) 
+    print(u)
+    print(B)
     f.predict(u=u, B=B)
     # Only update if we have new camera measurements
-    if prev_z[0] != z[0] or prev_z[1] != z[1] or prev_z[2] != z[2]:
+    if vis.found_robot:
         f.update(z)
-
+        
+    cv2.circle(vis.copy,(int(f.x[0,0]),int(f.x[1,0])),20,(255,0,0),3)
     return f.x[:,0] # Return the kalman filtered state

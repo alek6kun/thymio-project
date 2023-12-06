@@ -62,7 +62,7 @@ while True:
     f.predict(B = B, u = u) # Predict step of the Kalman filter
     if vis.found_robot: # Only update if the robot was found
         f.update(z) # Update step based on measurements from the camera
-    print(f.x[0,0],f.x[1,0])
+    #print(f.x[0,0],f.x[1,0])
     vis.copy = cv2.circle(vis.copy,(int(f.x[0,0]),int(f.x[1,0])),20,(255,0,0),3)
     
     # Update the last image acquisition time

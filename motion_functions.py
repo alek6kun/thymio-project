@@ -6,7 +6,7 @@ import numpy as np
 
 #Constants
 Ts = 0.01
-SPEED = 70
+SPEED = 30
 SEUIL_OBSTACLE = 100
 SEUIL_KIDNAPPED = 100
 tol = 30
@@ -21,25 +21,23 @@ rotation_factor = 110*np.pi/360
 obstacle_detected = 0
 kidnapped = 0
 
-def compute_movement(current_pos, obj, current_angle_deg): 
+def compute_movement(current_pos, obj, current_angle): 
     # current_angle_deg = angle between thymio front axis and x-axis
     # Extracting coordinates from current_pos and obj
     current_x, current_y = current_pos
     obj_x, obj_y = obj
 
     # Calculate distance between current position and the target object
-    distance = math.sqrt((obj_x - current_x)**2 + (obj_y - current_y)**2)
+    #distance = math.sqrt((obj_x - current_x)**2 + (obj_y - current_y)**2)
 
     # Calculate angle in radians
     angle_radians = math.atan2(obj_y - current_y, obj_x - current_x)
     
-    # Convert angle to degrees
-    angle_degrees = math.degrees(angle_radians) - current_angle_deg
+    
 
 
     
-    print(f"Distance: {distance}", f"degrees: {angle_degrees}")
-    return distance, angle_radians
+    return  angle_radians
 
 
 
@@ -102,7 +100,7 @@ async def stop(node):
     await node.set_variables(v)
     
 async def rotate(angle_diff,node) : 
-    if angle_diff < 0 :
+    if angle_diff <0 :
         v = {
             "motor.left.target": [int(-SPEED_LEFT)],
             "motor.right.target": [int(SPEED_RIGHT)],
