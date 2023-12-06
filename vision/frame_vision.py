@@ -38,7 +38,7 @@ def normal(v):
 
 ########## INITIALIZATION ##########
 
-frame = cv2.imread("plan_with_robot.PNG")
+frame = cv2.imread("plan_with_robot.png")
 copy = frame.copy()
 
 ########## ROBOT FINDING ##########

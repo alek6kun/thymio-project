@@ -23,10 +23,13 @@ vis.robot.x  # The x coordinate of the robot
 ```
 
 List of useful variables:
-- robot : contains x, y and angle of robot
+- robot : contains x, y and angle of robot. Angle is given in the normal
+  trigonometric standard (+pi to -pi, 0 at x axis pointing right)
 - scale : contains the scale of the image: pixels/real length (cm)
 - vertices : contains the coordinates of the visibility graph vertices
 - goal : contains x and y of goal
+- shortest_path : list of coordinates of points to follow for shortest path 
+  to goal
 
 Other variables, for completeness:
 - cam : object of class cv2.VideoCapture
@@ -38,3 +41,9 @@ To delete the object of vision class, do:
 ```python
 del vis
 ```
+
+## Tweaks that might need to be made
+
+- Change the webcam ID in the cv2.VideoCapture() function in the __init__() function
+- Change the lower and upper bounds for the colors that are detected in the find_robot() and find_goal() functions.
+- Change the black detection threshold in the cv2.threshold() function in find_graph.
