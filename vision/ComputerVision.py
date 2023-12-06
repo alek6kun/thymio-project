@@ -210,7 +210,7 @@ class Vision:
                     vector_farthest = find_vector_farthest(corner[0], corners)
                     # Place a point at a distance of 10 cm from the corner using the 
                     # SCALE we have found earlier from the robot
-                    new_point = corner[0] + self.scale * 0.1 * vector_farthest
+                    new_point = corner[0] + self.scale * 0.12 * vector_farthest
                     points.append(new_point)
                     obstacle_i.append((int(new_point[0]),int(new_point[1])))
                 if len(obstacle_i) >= 3:
