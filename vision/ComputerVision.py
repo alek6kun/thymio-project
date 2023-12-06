@@ -62,9 +62,9 @@ class Vision:
         if not valid:
             print("Error reading frame.")
         self.copy = self.frame.copy()
-        self.found_robot , self.robot, self.scale = self.find_robot()
-        _, self.vertices, self.graph = self.find_graph()
-        _, self.goal = self.find_goal()
+        self.found_robot, self.robot, self.scale = self.find_robot()
+        self.found_graph, self.vertices, self.graph = self.find_graph()
+        self.found_goal, self.goal = self.find_goal()
         self.shortest_path = []
 
     def __del__(self):
@@ -82,18 +82,18 @@ class Vision:
         if not valid:
             print("Error reading frame.")
         self.copy = self.frame.copy()
-        found_robot, robot, scale = self.find_robot()
-        if found_robot:
+        self.found_robot, robot, scale = self.find_robot()
+        if self.found_robot:
             self.scale = scale
             self.robot = robot
-        found_graph, vertices, graph = self.find_graph()
-        if found_graph:
+        self.found_graph, vertices, graph = self.find_graph()
+        if self.found_graph:
             self.vertices = vertices
             self.graph = graph
-        found_goal, goal = self.find_goal()
-        if found_goal:
+        self.found_goal, goal = self.find_goal()
+        if self.found_goal:
             self.goal = goal
-        if found_robot and found_goal and found_graph:
+        if self.found_robot and self.found_goal and self.found_graph:
             self.shortest_path = self.find_shortest_path()
 
     # Show the processed image

@@ -30,6 +30,8 @@ List of useful variables:
 - goal : contains x and y of goal
 - shortest_path : list of coordinates of points to follow for shortest path 
   to goal
+- found_robot, found_graph, found_goal : booleans returning true if the select
+  entities are found
 
 Other variables, for completeness:
 - cam : object of class cv2.VideoCapture
