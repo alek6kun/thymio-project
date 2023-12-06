@@ -66,17 +66,14 @@ class RepeatedTimer(object):
         self._timer.cancel()
         self.is_running = False
 
-def get_sensors(node, rotation_done):
+def get_sensors(node):
     
         global obstacle_detected, kidnapped
         prox_values = node["prox.horizontal"][:5]
-        #print(list(prox_values))
-        if obstacle_detected == 0 and rotation_done :
-            obstacle_detected = any(value > SEUIL_OBSTACLE for value in prox_values)
-            if obstacle_detected:
-                rotation_done = 0
+
+        obstacle_detected = any(value > SEUIL_OBSTACLE for value in prox_values)
+        
         ground_values = node["prox.ground.reflected"]
-        #print(list(ground_values))
         
         if ground_values[0] < SEUIL_KIDNAPPED or ground_values[1] < SEUIL_KIDNAPPED:
             kidnapped = True 
@@ -111,6 +108,14 @@ async def rotate(angle_diff,node) :
         "motor.right.target": [int(-SPEED_RIGHT)],
     }
     await node.set_variables(v)
+    
+async def drive_back(node):
+    v = {
+        "motor.left.target": [-int(SPEED_LEFT*4)],
+        "motor.right.target": [-int(SPEED_RIGHT*4)],
+    }
+    await node.set_variables(v)
+    
 
 def close_coordinates(x, y, w, z):
     distance = math.sqrt((w - x)**2 + (z - y)**2)
