@@ -32,7 +32,7 @@ process_variances = [3.8751605996417765e-10, 3.8751605996417765e-10, 2.965686371
 f.Q = np.diag(process_variances)
 
 
-def run_filter(speed_right, speed_left, prev_angle, vis, R, d, dt):
+def run_filter(speed_right, speed_left, prev_angle, vis):
     global f
     scale = vis.scale # Scale to go from m to camera coordinates
     # Converting the motors to m/s
@@ -41,14 +41,14 @@ def run_filter(speed_right, speed_left, prev_angle, vis, R, d, dt):
     # Converting to camera coordinates
     speed_left *= scale
     speed_right *= scale
-    R = R * scale
-    d *= scale
+    Radius = R * scale
+    wheelbase *= scale
     # Defining control input and control transition matrix
     u = np.array([[speed_right],
                   [speed_left]])
     B = np.array([[np.cos(prev_angle)*(dt/2), np.cos(prev_angle)*(dt/2)],
                     [np.sin(prev_angle)*(dt/2), np.sin(prev_angle)*(dt/2)],
-                    [(dt/d), (-dt/d)]]) * R
+                    [(dt/wheelbase), (-dt/wheelbase)]]) * Radius
     # Getting camera measurements
     z = np.array([vis.robot.x,vis.robot.y,vis.robot.angle]) 
     print(u)
