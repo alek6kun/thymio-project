@@ -1,5 +1,4 @@
 from filterpy.kalman import KalmanFilter
-from vision.ComputerVision import Vision
 import numpy as np
 
 
@@ -7,6 +6,7 @@ import numpy as np
 dimension_x = 3 # State dimension
 dimension_z = 3 # Measurement dimension
 
+thymio_speed_to_mms = 19.73913043478261/50 # Conversion from motor units to mm/s 
 R = 0.021 # [m] The radius of the Thymio's wheels
 d = 0.095 # [m] The wheelbase of the Thymio
 dt = 0.05 # [s] Time delta between steps
@@ -32,16 +32,27 @@ f.Q = np.diag(process_variances)
 
 
 def run_filter(speed_right, speed_left, prev_angle, vis, prev_z):
-    scale = vis.scale
+    global R, d, f
+    scale = vis.scale # Scale to go from m to camera coordinates
+    # Converting the motors to m/s
+    speed_right = (speed_right * 0.001) / thymio_speed_to_mms
+    speed_left = (speed_left * 0.001) / thymio_speed_to_mms
+    # Converting to camera coordinates
+    speed_left *= scale
+    speed_right *= scale
+    R = R * scale
+    d *= scale
+    # Defining control input and control transition matrix
     u = np.array([[speed_right],
                   [speed_left]])
     B = np.array([[np.cos(prev_angle)*(dt/2), np.cos(prev_angle)*(dt/2)],
                     [np.sin(prev_angle)*(dt/2), np.sin(prev_angle)*(dt/2)],
-                    [(dt/d), (-dt/d)]]) * R * scale
-    
+                    [(dt/d), (-dt/d)]]) * R
+    # Getting camera measurements
     z = np.array([vis.robot.x,vis.robot.y,vis.robot.angle]) 
     f.predict(u=u, B=B)
+    # Only update if we have new camera measurements
     if prev_z[0] != z[0] or prev_z[1] != z[1] or prev_z[2] != z[2]:
         f.update(z)
 
-    return f.x[:,0]
+    return f.x[:,0] # Return the kalman filtered state

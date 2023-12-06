@@ -18,6 +18,8 @@ SPEED_RIGHT = SPEED
 thymio_speed_to_mms = 19.73913043478261*1000/50 ##TO FIND THE MM/s speed, divide motors_speed by this, thix value has to be tuned for each thymio
 rotation_factor = 110*np.pi/360 
 #VALUES TO BE TUNED END
+obstacle_detected = 0
+kidnapped = 0
 
 def compute_movement(current_pos, obj, current_angle_deg): 
     # current_angle_deg = angle between thymio front axis and x-axis
@@ -37,7 +39,7 @@ def compute_movement(current_pos, obj, current_angle_deg):
 
     
     print(f"Distance: {distance}", f"degrees: {angle_degrees}")
-    return distance, angle_degrees
+    return distance, angle_radians
 
 
 
@@ -66,7 +68,7 @@ class RepeatedTimer(object):
         self._timer.cancel()
         self.is_running = False
 
-def get_horizontal():
+def get_sensors(node, rotation_done):
     
         global obstacle_detected, kidnapped
         prox_values = node["prox.horizontal"][:5]
@@ -83,19 +85,23 @@ def get_horizontal():
             print(f"kidnapped")
         else:
             kidnapped = False
-async def drive(): 
+        return kidnapped, obstacle_detected
+            
+async def drive(node): 
     v = {
         "motor.left.target": [int(SPEED_LEFT)],
         "motor.right.target": [int(SPEED_RIGHT)],
     }
     await node.set_variables(v)
-async def stop(): 
+    
+async def stop(node): 
     v = {
         "motor.left.target": [0],
         "motor.right.target": [0],
     }
     await node.set_variables(v)
-async def rotate(angle_diff) : 
+    
+async def rotate(angle_diff,node) : 
     if angle_diff < 0 :
         v = {
             "motor.left.target": [int(-SPEED_LEFT)],
