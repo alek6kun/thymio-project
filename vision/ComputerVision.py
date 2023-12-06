@@ -57,7 +57,7 @@ class Vision:
     # Initialise cam, frame, copy of frame, robot, scale, graph,
     # obstacle vertices, shortest_path
     def __init__(self):
-        self.cam = cv2.VideoCapture(2)
+        self.cam = cv2.VideoCapture(0)
         valid, self.frame = self.cam.read()
         if not valid:
             print("Error reading frame.")
@@ -161,7 +161,7 @@ class Vision:
 
             # The real distance between the two markers on the robot is around 8.5 cm. so we set a scale
             # to know how distant the objects are from the camera.
-            scale = np.linalg.norm(centroid[0] - centroid[1])/8.5
+            scale = np.linalg.norm(centroid[0] - centroid[1])/0.085
 
             return True, Robot((centroid[0][0] + centroid[1][0])/2.0, (centroid[0][1] + centroid[1][1])/2.0,
                         -np.arctan2(centroid[0][1]-centroid[1][1],centroid[0][0]-centroid[1][0])), scale
