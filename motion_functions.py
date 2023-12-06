@@ -6,7 +6,7 @@ import numpy as np
 
 #Constants
 Ts = 0.01
-SPEED = 30
+SPEED = 50
 SEUIL_OBSTACLE = 100
 SEUIL_KIDNAPPED = 100
 tol = 30
@@ -87,8 +87,8 @@ def get_sensors(node, rotation_done):
             
 async def drive(node): 
     v = {
-        "motor.left.target": [int(SPEED_LEFT)],
-        "motor.right.target": [int(SPEED_RIGHT)],
+        "motor.left.target": [int(SPEED_LEFT*3)],
+        "motor.right.target": [int(SPEED_RIGHT*3)],
     }
     await node.set_variables(v)
     
