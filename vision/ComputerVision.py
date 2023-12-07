@@ -112,7 +112,7 @@ class Vision:
     
     def draw_path(self,path):
         for i in range(len(path)-1):
-            cv2.line(self.copy, path[i], path[i+1], (10,10,10),1)
+            cv2.line(self.copy, path[i], path[i+1], (10,10,10),4)
 
     # Function to find robot location and frame scale
     def find_robot(self):
