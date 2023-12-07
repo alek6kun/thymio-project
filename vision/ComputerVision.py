@@ -164,7 +164,7 @@ class Vision:
             scale = np.linalg.norm(centroid[0] - centroid[1])/0.085
 
             return True, Robot((centroid[0][0] + centroid[1][0])/2.0, (centroid[0][1] + centroid[1][1])/2.0,
-                        -np.arctan2(centroid[0][1]-centroid[1][1],centroid[0][0]-centroid[1][0])), scale
+                        np.arctan2(centroid[0][1]-centroid[1][1],centroid[0][0]-centroid[1][0])), scale
         else:
             return False, Robot(0,0,0), 0 # Default value if robot not found
     
@@ -208,7 +208,7 @@ class Vision:
                 for corner in corners:
                     # Find the vector pointing outward from the corner
                     vector_farthest = find_vector_farthest(corner[0], corners)
-                    # Place a point at a distance of 10 cm from the corner using the 
+                    # Place a point at a distance of 13 cm from the corner using the 
                     # SCALE we have found earlier from the robot
                     new_point = corner[0] + self.scale * 0.13 * vector_farthest
                     points.append(new_point)

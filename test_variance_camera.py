@@ -1,9 +1,6 @@
 from vision.ComputerVision import Vision
 import time
 import cv2
-
-from filterpy.kalman import KalmanFilter
-from filterpy.common import Q_discrete_white_noise
 import numpy as np
 
 vis = Vision()

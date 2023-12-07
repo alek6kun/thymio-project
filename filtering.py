@@ -47,7 +47,7 @@ def run_filter(speed_right, speed_left, prev_angle, vis):
                     [(-dt/d), (dt/d)]]) * R
     
     # Getting camera measurements and conveting to [m]
-    measurement = np.array([vis.robot.x/camera_scale,vis.robot.y/camera_scale,-vis.robot.angle])
+    measurement = np.array([vis.robot.x/camera_scale, vis.robot.y/camera_scale, vis.robot.angle])
     
     # Predict step of kalman filter with control input
     f.predict(u = u, B = B)
