@@ -11,8 +11,8 @@ while True:
     if time.time() - last_image_time < 0.05:
         continue
     vis.show()
-
-    vis.update()
+    path = vis.shortest_path
+    vis.update(path)
 
     # Update the last image acquisition time
     last_image_time = time.time()

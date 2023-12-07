@@ -76,7 +76,7 @@ class Vision:
         del self.goal
 
     # Function to update the frame, and the various entities if found 
-    def update(self):
+    def update(self, curr_path):
 
         valid, self.frame = self.cam.read()
         if not valid:
@@ -95,6 +95,7 @@ class Vision:
             self.goal = goal
         if self.found_robot and self.found_goal and self.found_graph:
             self.shortest_path = self.find_shortest_path()
+        self.draw_path(curr_path)
 
     # Show the processed image
     def show(self):
@@ -106,10 +107,12 @@ class Vision:
                                             vg.Point(self.goal.x,self.goal.y))
 
         shortest_np = np.array([(point.x, point.y) for point in shortest], dtype=np.int32)
-        # Draw shortest path
-        for i in range(len(shortest_np)-1):
-            cv2.line(self.copy, shortest_np[i], shortest_np[i+1], (10,10,10),1)
+        
         return shortest_np
+    
+    def draw_path(self,path):
+        for i in range(len(path)-1):
+            cv2.line(self.copy, path[i], path[i+1], (10,10,10),1)
 
     # Function to find robot location and frame scale
     def find_robot(self):
