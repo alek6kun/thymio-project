@@ -2,8 +2,8 @@ import math
 
 # Constants
 SPEED = 75
-SEUIL_OBSTACLE = 100
-SEUIL_KIDNAPPED = 100
+THRESHOLD_OBSTACLE = 100
+THRESHOLD_KIDNAPPED = 100
 tol = 30
 
 # We add correction factors to tune the speed symmetry
@@ -23,11 +23,11 @@ def compute_movement(current_pos, obj):
 def get_sensors(node):
     prox_values = node["prox.horizontal"][:5]
 
-    obstacle_detected = any(value > SEUIL_OBSTACLE for value in prox_values)
+    obstacle_detected = any(value > THRESHOLD_OBSTACLE for value in prox_values)
     
     ground_values = node["prox.ground.reflected"]
     
-    if ground_values[0] < SEUIL_KIDNAPPED or ground_values[1] < SEUIL_KIDNAPPED:
+    if ground_values[0] < THRESHOLD_KIDNAPPED or ground_values[1] < THRESHOLD_KIDNAPPED:
         kidnapped = True 
     else:
         kidnapped = False
